@@ -2,6 +2,7 @@ package log
 
 import (
 	"io"
+	"os"
 
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -23,6 +24,7 @@ type logger struct {
 type Args struct {
 	Verbose bool
 	Writer  io.Writer
+	FileLog *os.File
 }
 
 func NewLogger(args Args) Logger {

@@ -40,6 +40,7 @@ func loginCmd() *cobra.Command {
 
 		return authCode, nil
 	}
+	_ = promptForAuthCode
 
 	var email, password, authCode string
 
@@ -69,12 +70,13 @@ func loginCmd() *cobra.Command {
 			return retry.Do(func() error {
 				if errors.Is(lastErr, appstore.ErrAuthCodeRequired) && interactive {
 					dependencies.Logger.Log().Msg("enter 2FA code:")
+					os.Exit(0)
 
-					var err error
-					authCode, err = promptForAuthCode()
-					if err != nil {
-						return fmt.Errorf("failed to read auth code: %w", err)
-					}
+					//var err error
+					//authCode, err = promptForAuthCode()
+					//if err != nil {
+					//	return fmt.Errorf("failed to read auth code: %w", err)
+					//}
 				}
 
 				dependencies.Logger.Verbose().

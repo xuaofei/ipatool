@@ -11,6 +11,7 @@ import (
 	"github.com/99designs/keyring"
 	cookiejar "github.com/juju/persistent-cookiejar"
 	"github.com/majd/ipatool/v2/pkg/appstore"
+	custom "github.com/majd/ipatool/v2/pkg/custom"
 	"github.com/majd/ipatool/v2/pkg/http"
 	"github.com/majd/ipatool/v2/pkg/keychain"
 	"github.com/majd/ipatool/v2/pkg/log"
@@ -52,10 +53,35 @@ func newLogger(format OutputFormat, verbose bool) log.Logger {
 	)
 }
 
+func newCustomLogger(format OutputFormat, verbose bool, email string, machine machine.Machine) log.Logger {
+	var console io.Writer
+	switch format {
+	case OutputFormatJSON:
+		console = os.Stdout
+	case OutputFormatText:
+		console = log.NewWriter()
+	}
+
+	logFile := filepath.Join(machine.HomeDirectory(), "ipatool.log")
+	f, err := os.OpenFile(logFile, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0o644)
+	if err != nil {
+		return nil
+	}
+	out := zerolog.SyncWriter(zerolog.MultiLevelWriter(console, f)) // 同时写控制台+文件
+	l := log.NewLogger(log.Args{Verbose: verbose, Writer: out, FileLog: f})
+	return l
+}
+
 // newCookieJar returns a new cookie jar instance.
 func newCookieJar(machine machine.Machine) http.CookieJar {
 	return util.Must(cookiejar.New(&cookiejar.Options{
 		Filename: filepath.Join(machine.HomeDirectory(), ConfigDirectoryName, CookieJarFileName),
+	}))
+}
+
+func newCustomCookieJar(machine machine.Machine) http.CookieJar {
+	return util.Must(cookiejar.New(&cookiejar.Options{
+		Filename: filepath.Join(machine.HomeDirectory(), CookieJarFileName),
 	}))
 }
 
@@ -96,17 +122,23 @@ func newKeychain(machine machine.Machine, logger log.Logger, interactive bool) k
 	return keychain.New(keychain.Args{Keyring: ring})
 }
 
+func newCustomKeychain(machine machine.Machine, email string, logger log.Logger, interactive bool) keychain.Keychain {
+	return custom.NewCustomKeychain(email)
+}
+
 // initWithCommand initializes the dependencies of the command.
 func initWithCommand(cmd *cobra.Command) {
 	verbose := cmd.Flag("verbose").Value.String() == "true"
+	email := cmd.Flag("email").Value.String()
 	interactive, _ := cmd.Context().Value("interactive").(bool)
 	format := util.Must(OutputFormatFromString(cmd.Flag("format").Value.String()))
 
-	dependencies.Logger = newLogger(format, verbose)
+	dependencies.Machine = custom.NewMachine(email, machine.Args{OS: dependencies.OS})
+	dependencies.Logger = newCustomLogger(format, verbose, email, dependencies.Machine)
 	dependencies.OS = operatingsystem.New()
-	dependencies.Machine = machine.New(machine.Args{OS: dependencies.OS})
-	dependencies.CookieJar = newCookieJar(dependencies.Machine)
-	dependencies.Keychain = newKeychain(dependencies.Machine, dependencies.Logger, interactive)
+
+	dependencies.CookieJar = newCustomCookieJar(dependencies.Machine)
+	dependencies.Keychain = newCustomKeychain(dependencies.Machine, email, dependencies.Logger, interactive)
 	dependencies.AppStore = appstore.NewAppStore(appstore.Args{
 		CookieJar:       dependencies.CookieJar,
 		OperatingSystem: dependencies.OS,
@@ -114,7 +146,7 @@ func initWithCommand(cmd *cobra.Command) {
 		Machine:         dependencies.Machine,
 	})
 
-	util.Must("", createConfigDirectory(dependencies.OS, dependencies.Machine))
+	//util.Must("", createConfigDirectory(dependencies.OS, dependencies.Machine))
 }
 
 // createConfigDirectory creates the configuration directory for the CLI tool, if needed.
