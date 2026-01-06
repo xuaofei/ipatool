@@ -70,7 +70,7 @@ func loginCmd() *cobra.Command {
 			return retry.Do(func() error {
 				if errors.Is(lastErr, appstore.ErrAuthCodeRequired) && interactive {
 					dependencies.Logger.Log().Msg("enter 2FA code:")
-					os.Exit(0)
+					return fmt.Errorf("enter 2FA code")
 
 					//var err error
 					//authCode, err = promptForAuthCode()
