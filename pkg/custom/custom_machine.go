@@ -1,8 +1,8 @@
 package custom
 
 import (
-	"fmt"
-	"net"
+	"crypto/md5"
+	"encoding/hex"
 	"os"
 	"path/filepath"
 	"strings"
@@ -15,30 +15,22 @@ type customachine struct {
 	email string
 }
 
+func md5String(s string) string {
+	sum := md5.Sum([]byte(s))         // [16]byte
+	return hex.EncodeToString(sum[:]) // 32 chars hex
+}
+
 func NewMachine(email string, args machine.Args) machine.Machine {
 	return &customachine{
 		machine.New(args), email,
 	}
 }
 
-func (*customachine) MacAddress() (string, error) {
-	interfaces, err := net.Interfaces()
-	if err != nil {
-		return "", fmt.Errorf("failed to get network interfaces: %w", err)
-	}
+func (m *customachine) MacAddress() (string, error) {
+	md5Hex := md5String(m.email + "teniux")
+	guid := md5Hex[:12] // 中间12位
 
-	if len(interfaces) == 0 {
-		return "", fmt.Errorf("could not find network interfaces: %w", err)
-	}
-
-	for _, netInterface := range interfaces {
-		addr := netInterface.HardwareAddr.String()
-		if addr != "" {
-			return addr, nil
-		}
-	}
-
-	return "", fmt.Errorf("could not find network interfaces with a valid mac address: %w", err)
+	return guid, nil
 }
 
 func (m *customachine) HomeDirectory() string {
