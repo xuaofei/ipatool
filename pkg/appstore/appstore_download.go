@@ -253,7 +253,7 @@ func (t *appstore) isDirectory(path string) (bool, error) {
 func (t *appstore) applyPatches(item downloadItemResult, acc Account, src, dst string) error {
 	srcZip, err := zip.OpenReader(src)
 	if err != nil {
-		return fmt.Errorf("failed to open zip reader: %w", err)
+		return fmt.Errorf("failed to open zip reader: %w src:%s", err, src)
 	}
 	defer srcZip.Close()
 
