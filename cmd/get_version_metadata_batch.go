@@ -18,9 +18,9 @@ type ExternalVersionIdList struct {
 // nolint:wrapcheck
 func getVersionMetadataBatchCmd() *cobra.Command {
 	var (
-		appID                 int64
-		bundleID              string
-		externalVersionIDList string
+		appID              int64
+		bundleID           string
+		externalVersionIDs string
 	)
 
 	cmd := &cobra.Command{
@@ -62,10 +62,10 @@ func getVersionMetadataBatchCmd() *cobra.Command {
 				}
 
 				dependencies.Logger.Log().
-					Str("externalVersionIDList", externalVersionIDList)
+					Str("externalVersionIDs", externalVersionIDs)
 
 				var externalVersionIdList ExternalVersionIdList
-				err = json.Unmarshal([]byte(externalVersionIDList), &externalVersionIdList)
+				err = json.Unmarshal([]byte(externalVersionIDs), &externalVersionIdList)
 				if err != nil {
 					return err
 				}
@@ -115,7 +115,7 @@ func getVersionMetadataBatchCmd() *cobra.Command {
 
 	cmd.Flags().Int64VarP(&appID, "app-id", "i", 0, "ID of the target iOS app (required)")
 	cmd.Flags().StringVarP(&bundleID, "bundle-identifier", "b", "", "The bundle identifier of the target iOS app (overrides the app ID)")
-	cmd.Flags().StringVar(&externalVersionIDList, "external-version-id-list", "", "External version identifier of the target iOS app (required)")
+	cmd.Flags().StringVar(&externalVersionIDs, "external-version-id-list", "", "External version identifier of the target iOS app (required)")
 
 	_ = cmd.MarkFlagRequired("external-version-id-list")
 
