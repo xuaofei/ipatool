@@ -61,6 +61,9 @@ func getVersionMetadataBatchCmd() *cobra.Command {
 					app = lookupResult.App
 				}
 
+				dependencies.Logger.Log().
+					Str("externalVersionIDList", externalVersionIDList)
+
 				var externalVersionIdList ExternalVersionIdList
 				err = json.Unmarshal([]byte(externalVersionIDList), &externalVersionIdList)
 				if err != nil {
