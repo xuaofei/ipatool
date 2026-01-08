@@ -67,7 +67,7 @@ func getVersionMetadataBatchCmd() *cobra.Command {
 					return err
 				}
 
-				sem := make(chan struct{}, 16) // 最多同时 16 个
+				sem := make(chan struct{}, 8) // 最多同时 16 个
 				var wg sync.WaitGroup
 				for _, id := range externalVersionIdList.AppVerIDs {
 					id := id
