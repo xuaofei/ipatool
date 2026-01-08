@@ -61,17 +61,13 @@ func getVersionMetadataBatchCmd() *cobra.Command {
 					app = lookupResult.App
 				}
 
-				dependencies.Logger.Log().
-					Str("externalVersionIDs", externalVersionIDs).
-					Send()
-
 				var externalVersionIdList ExternalVersionIdList
 				err = json.Unmarshal([]byte(externalVersionIDs), &externalVersionIdList)
 				if err != nil {
 					return err
 				}
 
-				sem := make(chan struct{}, 8) // 最多同时 8 个
+				sem := make(chan struct{}, 16) // 最多同时 16 个
 				var wg sync.WaitGroup
 				for _, id := range externalVersionIdList.AppVerIDs {
 					id := id
@@ -87,6 +83,10 @@ func getVersionMetadataBatchCmd() *cobra.Command {
 							VersionID: id,
 						})
 						if err != nil {
+							dependencies.Logger.Log().
+								Str("externalVersionID", id).
+								Bool("success", false).
+								Send()
 							return
 						}
 
