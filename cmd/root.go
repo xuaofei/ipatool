@@ -17,6 +17,7 @@ func rootCmd() *cobra.Command {
 		verbose        bool
 		nonInteractive bool
 		format         OutputFormat
+		email          string
 	)
 
 	cmd := &cobra.Command{
@@ -40,6 +41,8 @@ func rootCmd() *cobra.Command {
 	cmd.PersistentFlags().BoolVar(&verbose, "verbose", false, "enables verbose logs")
 	cmd.PersistentFlags().BoolVarP(&nonInteractive, "non-interactive", "", false, "run in non-interactive session")
 	cmd.PersistentFlags().StringVar(&keychainPassphrase, "keychain-passphrase", "", "passphrase for unlocking keychain")
+	cmd.PersistentFlags().StringVarP(&email, "email", "e", "", "email address for the Apple ID (required)")
+	_ = cmd.MarkPersistentFlagRequired("email")
 
 	cmd.AddCommand(authCmd())
 	cmd.AddCommand(downloadCmd())
@@ -47,6 +50,7 @@ func rootCmd() *cobra.Command {
 	cmd.AddCommand(searchCmd())
 	cmd.AddCommand(ListVersionsCmd())
 	cmd.AddCommand(getVersionMetadataCmd())
+	cmd.AddCommand(getVersionMetadataBatchCmd())
 
 	return cmd
 }
